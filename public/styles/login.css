@@ -1,0 +1,242 @@
+/* Reset margins and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.orange{background-color: rgb(244, 123, 32);}
+.brown{background-color: rgb(52, 37, 37);}
+
+html{
+    font-size: clamp(9px,2vw,20px); 
+    scroll-behavior: auto;
+}
+
+body{
+    font-family: Arial, Helvetica, sans-serif; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+.main{
+    width: 100vw; 
+    min-height: 100vh; 
+    display: flex; 
+    align-items: center; 
+    justify-content: flex-start; /* Changed from center to flex-start */
+    flex-direction: column; 
+    background-color: rgb(244, 123, 32); 
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.header{
+    width: 100%; 
+    min-height: 17vw; 
+    display: flex; 
+    flex-direction: row; 
+    align-items: center; 
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.con-in-header1{
+    width: 70%; 
+    height: 17vw; 
+    background-color: transparent; 
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.title h1{
+    color: white; 
+    font-size: 2.5rem; 
+    margin-top: 2rem;
+}
+
+.con-in-header2{
+    width: 30%; 
+    height: 17vw; 
+    background-color: transparent; 
+    display: flex; 
+    align-items: flex-end; 
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+.logo-con {
+    height: 8rem; 
+    width: 100%; 
+    background-color: rgb(52, 37, 37); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    flex-direction: column; 
+    clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
+    margin: 0;
+    padding: 0;
+}
+
+.logo-con img{
+    height: 5rem; 
+    width: 5rem;
+}
+
+.logo-con h3{
+    margin: 0 0 0 4rem; 
+    color: orange;
+}
+
+.login-container{
+    width: 100%; 
+    height: auto; 
+    background-color: rgb(52, 37, 37); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-direction: column; 
+    padding: 2rem 0; 
+    margin-top: 0;
+}
+
+.tabs{
+    width: 90%; 
+    display: flex; 
+    margin-bottom: 2rem; 
+    background-color: white; 
+    border-radius: 1rem;
+}
+
+.tab{
+    padding: 1rem 2rem; 
+    cursor: pointer; 
+    border: none; 
+    background: none; 
+    font-size: 1.2rem; 
+    flex: 1; 
+    text-align: center; 
+    border-radius: 1rem;
+}
+
+.tab.active{
+    background-color: rgb(244, 123, 32); 
+    color: white;
+}
+
+.form-container{
+    width: 90%; 
+    display: none; 
+    background-color: white; 
+    border-radius: 1rem; 
+    padding: 1.5rem;
+}
+
+.form-container.active{
+    display: block;
+}
+
+.form-group{
+    margin-bottom: 1.5rem; 
+    display: flex; 
+    flex-direction: row; 
+    align-items: center; 
+    justify-content: flex-start;
+}
+
+.form-group label{
+    display: block; 
+    margin-bottom: 0.5rem; 
+    font-weight: bold; 
+    color: #333; 
+    width: 30%;
+}
+
+.form-group input{
+    width: 70%; 
+    padding: 0.8rem; 
+    border: 2px solid #ddd; 
+    border-radius: 0.5rem; 
+    font-size: 1rem; 
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus{
+    outline: none; 
+    border-color: rgb(244, 123, 32);
+}
+
+.submit-btn{
+    width: 100%; 
+    padding: 1rem; 
+    background: rgb(244, 123, 32); 
+    color: white; 
+    border: none; 
+    border-radius: 0.5rem; 
+    font-size: 1.2rem; 
+    cursor: pointer; 
+    transition: background 0.3s; 
+    margin-top: 1rem;
+}
+
+.submit-btn:hover{
+    background: rgb(200, 100, 25);
+}
+
+.message{
+    padding: 1rem; 
+    border-radius: 0.5rem; 
+    margin-bottom: 1.5rem; 
+    text-align: center; 
+    display: none; 
+    background-color: white;
+}
+
+.message.success{
+    background: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb;
+}
+
+.message.error{
+    background: #f8d7da; 
+    color: #721c24; 
+    border: 1px solid #f5c6cb;
+}
+
+.auth-status{
+    text-align: center; 
+    margin-top: 1.5rem; 
+    padding: 1rem; 
+    background: white; 
+    border-radius: 0.5rem; 
+    width: 90%;
+}
+
+.auth-status a{
+    color: rgb(244, 123, 32); 
+    text-decoration: none; 
+    margin: 0 0.5rem;
+}
+
+.auth-status a:hover{
+    text-decoration: underline;
+}
+
+#registerUserType{width: 70%;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
