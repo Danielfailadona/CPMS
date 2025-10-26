@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load data
     loadTasksBtn.addEventListener('click', loadTasks);
     loadUploadsBtn.addEventListener('click', loadUploads);
+    document.getElementById('loadAllFilesBtn').addEventListener('click', loadAllFiles);
 
     // Clear form
     clearFormBtn.addEventListener('click', resetForm);
@@ -371,25 +372,246 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide all sections
         document.getElementById('tasks-section').style.display = 'none';
         document.getElementById('files-section').style.display = 'none';
+        document.getElementById('all-files-section').style.display = 'none';
         document.getElementById('upload-section').style.display = 'none';
+        document.getElementById('camera-section').style.display = 'none';
         
         // Remove active class from all nav buttons
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         
         // Show selected section and activate button
         if (section === 'tasks') {
-            document.getElementById('tasks-section').style.display = 'block';
+            if (document.getElementById('tasks-section')) {
+                document.getElementById('tasks-section').style.display = 'block';
+                loadTasks();
+            }
             event.target.classList.add('active');
-            loadTasks();
         } else if (section === 'files') {
             document.getElementById('files-section').style.display = 'block';
             event.target.classList.add('active');
             loadUploads();
+        } else if (section === 'all-files') {
+            if (document.getElementById('all-files-section')) {
+                document.getElementById('all-files-section').style.display = 'block';
+                loadAllFiles();
+            }
+            event.target.classList.add('active');
         } else if (section === 'upload') {
             document.getElementById('upload-section').style.display = 'block';
             event.target.classList.add('active');
+        } else if (section === 'camera') {
+            document.getElementById('camera-section').style.display = 'block';
+            event.target.classList.add('active');
+            initializeCamera();
         }
     };
+
+    // Camera functionality
+    let cameraStream = null;
+    let photoTimestamp = null;
+    let photoBlob = null;
+
+    function initializeCamera() {
+        const startBtn = document.getElementById('start-camera-btn');
+        const takeBtn = document.getElementById('take-photo-btn');
+        const stopBtn = document.getElementById('stop-camera-btn');
+        const video = document.getElementById('camera-video');
+        const canvas = document.getElementById('camera-canvas');
+        const preview = document.getElementById('photo-preview');
+        const uploadForm = document.getElementById('camera-upload-form');
+        
+        startBtn.addEventListener('click', startCamera);
+        takeBtn.addEventListener('click', takePhoto);
+        stopBtn.addEventListener('click', stopCamera);
+        document.getElementById('retake-photo-btn').addEventListener('click', retakePhoto);
+        uploadForm.addEventListener('submit', uploadCameraPhoto);
+    }
+
+    async function startCamera() {
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } // Use back camera if available
+            });
+            
+            const video = document.getElementById('camera-video');
+            video.srcObject = cameraStream;
+            
+            document.getElementById('start-camera-btn').style.display = 'none';
+            document.getElementById('take-photo-btn').style.display = 'inline-block';
+            document.getElementById('stop-camera-btn').style.display = 'inline-block';
+            
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            alert('Error accessing camera. Please make sure you have granted camera permissions.');
+        }
+    }
+
+    function takePhoto() {
+        const video = document.getElementById('camera-video');
+        const canvas = document.getElementById('camera-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size to video size
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Capture current timestamp (cannot be edited)
+        photoTimestamp = new Date();
+        
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert to blob
+        canvas.toBlob(function(blob) {
+            photoBlob = blob;
+            
+            // Show preview
+            const preview = document.getElementById('photo-preview');
+            const previewImg = document.getElementById('preview-image');
+            const timestampDiv = document.getElementById('photo-timestamp');
+            
+            previewImg.src = URL.createObjectURL(blob);
+            timestampDiv.textContent = `Photo taken at: ${photoTimestamp.toLocaleString()}`;
+            preview.style.display = 'block';
+            
+            // Hide camera controls
+            document.getElementById('take-photo-btn').style.display = 'none';
+            
+        }, 'image/jpeg', 0.8);
+    }
+
+    function retakePhoto() {
+        document.getElementById('photo-preview').style.display = 'none';
+        document.getElementById('take-photo-btn').style.display = 'inline-block';
+        document.getElementById('camera-upload-form').reset();
+        photoBlob = null;
+        photoTimestamp = null;
+    }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        
+        document.getElementById('start-camera-btn').style.display = 'inline-block';
+        document.getElementById('take-photo-btn').style.display = 'none';
+        document.getElementById('stop-camera-btn').style.display = 'none';
+        document.getElementById('photo-preview').style.display = 'none';
+        
+        const video = document.getElementById('camera-video');
+        video.srcObject = null;
+    }
+
+    async function uploadCameraPhoto(e) {
+        e.preventDefault();
+        
+        if (!photoBlob || !photoTimestamp) {
+            alert('Please take a photo first.');
+            return;
+        }
+        
+        const uploadBtn = document.getElementById('upload-photo-btn');
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading...';
+        
+        try {
+            // Create form data with photo
+            const formData = new FormData();
+            const filename = `photo_${Date.now()}.jpg`;
+            formData.append('file', photoBlob, filename);
+            
+            // Upload file first
+            const uploadResponse = await fetch('/upload-file-test', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+            
+            const uploadResult = await uploadResponse.json();
+            
+            if (!uploadResult.success) {
+                throw new Error(uploadResult.message || 'Photo upload failed');
+            }
+            
+            // Save photo info to database with timestamp
+            const photoData = {
+                filename: filename,
+                file_path: uploadResult.path,
+                file_size: formatFileSize(photoBlob.size),
+                mime_type: 'image/jpeg',
+                upload_type: 'image',
+                title: document.getElementById('photo_title').value,
+                description: document.getElementById('photo_description').value,
+                is_public: document.getElementById('photo_is_public').checked,
+                user_id: getCurrentUserId(),
+                photo_taken_at: photoTimestamp.toISOString().slice(0, 19).replace('T', ' '),
+                is_camera_photo: true
+            };
+            
+            const result = await uploadCrud.create(photoData);
+            
+            if (result.success) {
+                alert('Photo uploaded successfully with timestamp!');
+                stopCamera();
+                document.getElementById('camera-upload-form').reset();
+                loadUploads();
+            } else {
+                alert('Error saving photo info: ' + (result.message || 'Unknown error'));
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error uploading photo: ' + error.message);
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload Photo';
+        }
+    }
+
+    // Load All Files function
+    async function loadAllFiles() {
+        try {
+            const uploads = await uploadCrud.readAll();
+            
+            if (uploads.length === 0) {
+                document.getElementById('all-files-list').innerHTML = '<p class="no-uploads">No files found.</p>';
+                return;
+            }
+            
+            const uploadsHTML = uploads.map(upload => `
+                <div class="upload-item" data-id="${upload.id}">
+                    <div class="upload-info">
+                        <div class="upload-title">${upload.title || upload.filename}</div>
+                        <div class="upload-details">
+                            <span class="upload-type">${getUploadTypeLabel(upload.upload_type)}</span>
+                            <span class="upload-size">${upload.file_size}</span>
+                            <span class="upload-date">${new Date(upload.created_at).toLocaleDateString()}</span>
+                            <span class="${upload.is_public ? 'upload-public' : 'upload-private'}">
+                                ${upload.is_public ? 'Public' : 'Private'}
+                            </span>
+                            <span class="upload-user">User ID: ${upload.user_id}</span>
+                            ${upload.is_camera_photo ? '<span class="camera-photo">📷 Camera Photo</span>' : ''}
+                            ${upload.photo_taken_at ? `<span class="photo-timestamp">Taken: ${new Date(upload.photo_taken_at).toLocaleString()}</span>` : ''}
+                        </div>
+                        ${upload.description ? `<div class="upload-description">${upload.description}</div>` : ''}
+                    </div>
+                    <div class="upload-actions">
+                        <button class="download-btn" onclick="downloadUpload(event, ${upload.id}, '${upload.filename}')">Download</button>
+                        <button class="view-btn" onclick="viewUpload(${upload.id})">View Details</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('all-files-list').innerHTML = uploadsHTML;
+        } catch (error) {
+            console.error('Error loading all files:', error);
+            document.getElementById('all-files-list').innerHTML = '<p class="no-uploads">Error loading files.</p>';
+        }
+    }
 
     // Load data on page load
     loadTasks();

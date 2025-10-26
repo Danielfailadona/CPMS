@@ -21,12 +21,16 @@ class Upload extends Model
         'project_id',
         'task_id',
         'is_public',
-        'metadata'
+        'metadata',
+        'photo_taken_at',
+        'is_camera_photo'
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'is_public' => 'boolean',
+        'is_camera_photo' => 'boolean',
+        'photo_taken_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
