@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const taskCrud = new CrudHelper('tasks');
     const complaintCrud = new CrudHelper('complaints');
     const uploadCrud = new CrudHelper('uploads');
+    const userCrud = new CrudHelper('users');
 
     // Get form elements
     const taskForm = document.getElementById('taskForm');
@@ -26,6 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadUploadsBtn.addEventListener('click', loadUploads);
     clearTaskFormBtn.addEventListener('click', resetTaskForm);
     clearFormBtn.addEventListener('click', resetForm);
+    
+    // Filter functionality
+    document.getElementById('apply-filters').addEventListener('click', () => loadUploads(true));
+    document.getElementById('search-files').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') loadUploads(true);
+    });
 
     // Handle task submission
     taskForm.addEventListener('submit', async function(e) {
@@ -42,8 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 description: formData.get('description'),
                 priority: formData.get('priority'),
                 due_date: formData.get('due_date') || null,
-                worker_id: getCurrentUserId(),
-                foreman_id: 1 // Assuming foreman ID is 1
+                worker_id: await getCurrentUserId(),
+                foreman_id: formData.get('foreman_id')
             };
 
             const result = await taskCrud.create(taskData);
@@ -108,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: formData.get('title') || file.name,
                 description: formData.get('description'),
                 is_public: formData.get('is_public') ? true : false,
-                user_id: getCurrentUserId()
+                user_id: await getCurrentUserId()
             };
 
             const result = await uploadCrud.create(uploadData);
@@ -146,17 +153,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="complaint-priority priority-${complaint.priority}">${complaint.priority.toUpperCase()}</span>
                             <span class="complaint-status status-${complaint.status}">${complaint.status.replace('_', ' ').toUpperCase()}</span>
                             <span class="complaint-date">${new Date(complaint.created_at).toLocaleDateString()}</span>
-                            <span class="complaint-client">Client ID: ${complaint.client_id}</span>
+                            <span class="complaint-client">Client ID: ${complaint.client_id}</span>';
                         </div>
                         <div class="complaint-description">${complaint.description}</div>
-                        ${complaint.worker_notes ? `<div class="worker-notes"><strong>My Notes:</strong> ${complaint.worker_notes}</div>` : ''}
+                        ${complaint.worker_notes ? `<div class="staff-notes"><strong>My Notes:</strong> ${complaint.worker_notes}</div>` : ''}
                     </div>
                     <div class="complaint-actions">
                         ${complaint.status !== 'resolved' && complaint.status !== 'closed' ? `
                             <button class="action-btn" onclick="updateComplaintStatus(${complaint.id}, 'in_progress')">Take Action</button>
                             <button class="resolve-btn" onclick="resolveComplaint(${complaint.id})">Mark Resolved</button>
                         ` : ''}
-                        <button class="notes-btn" onclick="addWorkerNotes(${complaint.id})">Add Notes</button>
+                        <button class="notes-btn" onclick="addStaffNotes(${complaint.id})">Add Notes</button>
                     </div>
                 </div>
             `).join('');
@@ -168,12 +175,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function loadUploads() {
+    async function loadUploads(applyFilters = false) {
         try {
             const uploads = await uploadCrud.readAll();
-            const currentUserId = getCurrentUserId();
+            const currentUserId = await getCurrentUserId();
             
-            const userUploads = uploads.filter(upload => upload.user_id == currentUserId);
+            let userUploads = uploads.filter(upload => upload.user_id == currentUserId);
+            
+            // Apply search and type filters
+            if (applyFilters) {
+                const searchTerm = document.getElementById('search-files').value.toLowerCase();
+                const typeFilter = document.getElementById('filter-type').value;
+                
+                if (searchTerm) {
+                    userUploads = userUploads.filter(upload => 
+                        (upload.title && upload.title.toLowerCase().includes(searchTerm)) ||
+                        (upload.filename && upload.filename.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                if (typeFilter !== 'all') {
+                    userUploads = userUploads.filter(upload => upload.upload_type === typeFilter);
+                }
+            }
             
             if (userUploads.length === 0) {
                 uploadsList.innerHTML = '<p class="no-uploads">No files uploaded yet.</p>';
@@ -254,8 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Add worker notes
-    window.addWorkerNotes = async function(id) {
+    // Add staff notes
+    window.addStaffNotes = async function(id) {
         const notes = prompt('Enter your notes:');
         
         if (notes) {
@@ -356,8 +380,25 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('is_public').checked = false;
     }
 
-    function getCurrentUserId() {
-        return 1; // Replace with actual user ID from session
+    // Helper function to get current user ID
+    let currentUserId = null;
+    
+    async function getCurrentUserId() {
+        if (currentUserId === null) {
+            try {
+                const response = await fetch('/current-user');
+                const result = await response.json();
+                if (result.success) {
+                    currentUserId = result.user.id;
+                } else {
+                    currentUserId = 1; // fallback
+                }
+            } catch (error) {
+                console.error('Error getting current user:', error);
+                currentUserId = 1; // fallback
+            }
+        }
+        return currentUserId;
     }
 
     function formatFileSize(bytes) {
@@ -372,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const types = {
             'task': 'Task',
             'image': 'Image',
-            'report': 'Work Report',
+            'report': 'Staff Report',
             'safety': 'Safety',
             'inspection': 'Inspection',
             'other': 'Other'
@@ -382,10 +423,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadTasks() {
         try {
-            const tasks = await taskCrud.readAll();
-            const currentUserId = getCurrentUserId();
+            const [tasks, users] = await Promise.all([
+                taskCrud.readAll(),
+                userCrud.readAll()
+            ]);
+            const currentUserId = await getCurrentUserId();
             
             const userTasks = tasks.filter(task => task.worker_id == currentUserId);
+            
+            // Add foreman names to tasks
+            userTasks.forEach(task => {
+                const foreman = users.find(user => user.id == task.foreman_id);
+                task.foreman_name = foreman ? foreman.name : 'Unknown Foreman';
+            });
             
             if (userTasks.length === 0) {
                 tasksList.innerHTML = '<p class="no-tasks">No tasks sent yet.</p>';
@@ -401,6 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="task-status status-${task.status}">${task.status.replace('_', ' ').toUpperCase()}</span>
                             <span class="task-date">${new Date(task.created_at).toLocaleDateString()}</span>
                             ${task.due_date ? `<span class="task-due">Due: ${new Date(task.due_date).toLocaleDateString()}</span>` : ''}
+                            <span class="task-foreman">Assigned to: ${task.foreman_name}</span>
                         </div>
                         <div class="task-description">${task.description}</div>
                         ${task.foreman_notes ? `<div class="foreman-notes"><strong>Foreman Notes:</strong> ${task.foreman_notes}</div>` : ''}
@@ -497,6 +548,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (section === 'send-task') {
             document.getElementById('send-task-section').style.display = 'block';
             event.target.classList.add('active');
+            loadForemen();
         } else if (section === 'complaints') {
             document.getElementById('complaints-section').style.display = 'block';
             event.target.classList.add('active');
@@ -647,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: document.getElementById('photo_title').value,
                 description: document.getElementById('photo_description').value,
                 is_public: document.getElementById('photo_is_public').checked,
-                user_id: getCurrentUserId(),
+                user_id: await getCurrentUserId(),
                 photo_taken_at: photoTimestamp.toISOString().slice(0, 19).replace('T', ' '),
                 is_camera_photo: true
             };
@@ -672,8 +724,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Load foremen for task assignment
+    async function loadForemen() {
+        try {
+            const users = await userCrud.readAll();
+            const foremen = users.filter(user => user.user_type === 'foreman' && user.is_active && user.is_authorized);
+            
+            const foremanSelect = document.getElementById('task_foreman');
+            foremanSelect.innerHTML = '<option value="">Select a foreman...</option>';
+            
+            foremen.forEach(foreman => {
+                const option = document.createElement('option');
+                option.value = foreman.id;
+                option.textContent = foreman.name;
+                foremanSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading foremen:', error);
+        }
+    }
+
     // Load data on page load
     loadTasks();
+    loadForemen();
 });
 
 // Logout function

@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize CRUD helpers
     const taskCrud = new CrudHelper('tasks');
     const uploadCrud = new CrudHelper('uploads');
+    const userCrud = new CrudHelper('users');
     
     const form = document.getElementById('uploadForm');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -15,6 +16,16 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTasksBtn.addEventListener('click', loadTasks);
     loadUploadsBtn.addEventListener('click', loadUploads);
     document.getElementById('loadAllFilesBtn').addEventListener('click', loadAllFiles);
+    
+    // Filter functionality
+    document.getElementById('apply-filters').addEventListener('click', () => loadUploads(true));
+    document.getElementById('apply-all-filters').addEventListener('click', () => loadAllFiles(true));
+    document.getElementById('search-files').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') loadUploads(true);
+    });
+    document.getElementById('search-all-files').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') loadAllFiles(true);
+    });
 
     // Clear form
     clearFormBtn.addEventListener('click', resetForm);
@@ -67,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: formData.get('title') || file.name,
                 description: formData.get('description'),
                 is_public: formData.get('is_public') ? true : false,
-                user_id: getCurrentUserId()
+                user_id: await getCurrentUserId()
             };
 
             const result = await uploadCrud.create(uploadData);
@@ -90,13 +101,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // ==================== END STEP 5 ====================
 
-    async function loadUploads() {
+    async function loadUploads(applyFilters = false) {
         try {
             const uploads = await uploadCrud.readAll();
-            const currentUserId = getCurrentUserId();
+            const currentUserId = await getCurrentUserId();
             
             // Filter to show only current user's uploads
-            const userUploads = uploads.filter(upload => upload.user_id == currentUserId);
+            let userUploads = uploads.filter(upload => upload.user_id == currentUserId);
+            
+            // Apply search and type filters
+            if (applyFilters) {
+                const searchTerm = document.getElementById('search-files').value.toLowerCase();
+                const typeFilter = document.getElementById('filter-type').value;
+                
+                if (searchTerm) {
+                    userUploads = userUploads.filter(upload => 
+                        (upload.title && upload.title.toLowerCase().includes(searchTerm)) ||
+                        (upload.filename && upload.filename.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                if (typeFilter !== 'all') {
+                    userUploads = userUploads.filter(upload => upload.upload_type === typeFilter);
+                }
+            }
             
             if (userUploads.length === 0) {
                 uploadsList.innerHTML = '<p class="no-uploads">No files uploaded yet.</p>';
@@ -228,11 +256,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Helper function to get current user ID
-    function getCurrentUserId() {
-        // This should come from your authentication system
-        // For now, we'll return a placeholder
-        // In a real app, you'd get this from the session or JWT token
-        return 1; // Replace with actual user ID from session
+    let currentUserId = null;
+    
+    async function getCurrentUserId() {
+        if (currentUserId === null) {
+            try {
+                const response = await fetch('/current-user');
+                const result = await response.json();
+                if (result.success) {
+                    currentUserId = result.user.id;
+                } else {
+                    currentUserId = 1; // fallback
+                }
+            } catch (error) {
+                console.error('Error getting current user:', error);
+                currentUserId = 1; // fallback
+            }
+        }
+        return currentUserId;
     }
 
     // Helper function to format file size
@@ -261,14 +302,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadTasks() {
         try {
-            const tasks = await taskCrud.readAll();
-            const currentUserId = getCurrentUserId();
+            const [tasks, users, currentUserId] = await Promise.all([
+                taskCrud.readAll(),
+                userCrud.readAll(),
+                getCurrentUserId()
+            ]);
             
             // Show tasks assigned to this foreman
             const foremanTasks = tasks.filter(task => task.foreman_id == currentUserId);
             
+            // Add staff names to tasks
+            foremanTasks.forEach(task => {
+                const staff = users.find(user => user.id == task.worker_id);
+                task.staff_name = staff ? staff.name : 'Unknown Staff';
+            });
+            
             if (foremanTasks.length === 0) {
-                tasksList.innerHTML = '<p class="no-tasks">No tasks from workers.</p>';
+                tasksList.innerHTML = '<p class="no-tasks">No tasks from staff.</p>';
                 return;
             }
             
@@ -281,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="task-status status-${task.status}">${task.status.replace('_', ' ').toUpperCase()}</span>
                             <span class="task-date">${new Date(task.created_at).toLocaleDateString()}</span>
                             ${task.due_date ? `<span class="task-due">Due: ${new Date(task.due_date).toLocaleDateString()}</span>` : ''}
-                            <span class="task-worker">From Worker ID: ${task.worker_id}</span>
+                            <span class="task-staff">From: ${task.staff_name}</span>
                         </div>
                         <div class="task-description">${task.description}</div>
                         ${task.foreman_notes ? `<div class="foreman-notes"><strong>My Notes:</strong> ${task.foreman_notes}</div>` : ''}
@@ -547,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: document.getElementById('photo_title').value,
                 description: document.getElementById('photo_description').value,
                 is_public: document.getElementById('photo_is_public').checked,
-                user_id: getCurrentUserId(),
+                user_id: await getCurrentUserId(),
                 photo_taken_at: photoTimestamp.toISOString().slice(0, 19).replace('T', ' '),
                 is_camera_photo: true
             };
@@ -573,9 +623,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Load All Files function
-    async function loadAllFiles() {
+    async function loadAllFiles(applyFilters = false) {
         try {
-            const uploads = await uploadCrud.readAll();
+            let uploads = await uploadCrud.readAll();
+            
+            // Apply search and type filters
+            if (applyFilters) {
+                const searchTerm = document.getElementById('search-all-files').value.toLowerCase();
+                const typeFilter = document.getElementById('filter-all-type').value;
+                
+                if (searchTerm) {
+                    uploads = uploads.filter(upload => 
+                        (upload.title && upload.title.toLowerCase().includes(searchTerm)) ||
+                        (upload.filename && upload.filename.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                if (typeFilter !== 'all') {
+                    uploads = uploads.filter(upload => upload.upload_type === typeFilter);
+                }
+            }
             
             if (uploads.length === 0) {
                 document.getElementById('all-files-list').innerHTML = '<p class="no-uploads">No files found.</p>';

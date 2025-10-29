@@ -3,45 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO Dashboard - File Management</title>
-    <link rel="stylesheet" href="{{ asset('styles/foreman.css') }}">
-    <link rel="stylesheet" href="{{ asset('styles/nav.css') }}">
+    <title>CEO Dashboard - CPMS</title>
+    <link rel="stylesheet" href="{{ asset('styles/sidebar.css') }}">
 </head>
 <body>
-    <div class="main">
-        <div class="header">
-            <div class="header-left">
-                <div class="title">
-                    <h1>CEO DASHBOARD - FILE MANAGEMENT</h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-pic">
+                    <img src="{{ asset('images/test.jpg') }}" alt="Profile">
                 </div>
+                <h3>CEO DASHBOARD</h3>
             </div>
-            
-            <div class="header-right">
-                <div class="user-menu">
-                    <button onclick="logout()" class="logout-btn">Logout</button>
-                </div>
-                <div class="logo-con">
-                    <img src="{{ asset('images/test.jpg') }}" alt="logo">
-                    <h3>CPMS</h3>
-                </div>
-            </div>
+
+            <ul class="menu">
+                <li><a href="#" onclick="showSection('files')" class="active">My Files</a></li>
+                <li><a href="#" onclick="showSection('upload')">Upload File</a></li>
+                <li><a href="#" onclick="showSection('camera')">📷 Take Photo</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
         </div>
 
-        <div class="dashboard-content">
-            <!-- Navigation Buttons -->
-            <div class="section nav-section">
-                <div class="nav-buttons">
-                    <button class="nav-btn active" onclick="showSection('files')">My Files</button>
-                    <button class="nav-btn" onclick="showSection('upload')">Upload File</button>
-                    <button class="nav-btn" onclick="showSection('camera')">📷 Take Photo</button>
-                </div>
-            </div>
+        <!-- Main Content -->
+        <div class="main-content">
 
             <!-- Uploads List Section -->
             <div class="section uploads-section" id="files-section">
                 <div class="section-header">
                     <h3>My Uploads</h3>
                     <button type="button" id="loadUploadsBtn" class="action-btn">Refresh Files</button>
+                </div>
+                <div class="file-filters" style="margin-bottom: 15px;">
+                    <input type="text" id="search-files" placeholder="Search files by name..." style="padding: 8px; margin-right: 10px; width: 200px;">
+                    <select id="filter-type" style="padding: 8px; margin-right: 10px;">
+                        <option value="all">All Types</option>
+                        <option value="report">Reports</option>
+                        <option value="image">Images</option>
+                        <option value="document">Documents</option>
+                        <option value="contract">Contracts</option>
+                        <option value="invoice">Invoices</option>
+                        <option value="blueprint">Blueprints</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <button type="button" id="apply-filters" class="action-btn">Apply Filters</button>
                 </div>
                 <div id="uploads-list" class="uploads-list"></div>
             </div>
@@ -171,5 +176,29 @@
     
     <script src="{{ asset('js/crudHelper.js') }}"></script>
     <script src="{{ asset('js/foreman.js') }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.btn');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
+    
+    function showSection(sectionName) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        const targetSection = document.getElementById(sectionName + '-section');
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+    }
+    </script>
 </body>
 </html>

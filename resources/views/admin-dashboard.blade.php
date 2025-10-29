@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - User Management</title>
-    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+    <title>Admin Dashboard - CPMS</title>
+    <link rel="stylesheet" href="{{ asset('styles/sidebar.css') }}">
 </head>
 <body>
-    <div class="main">
-        <div class="header">
-            <div class="header-left">
-                <div class="title">
-                    <h1>ADMIN DASHBOARD - USER MANAGEMENT</h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-pic">
+                    <img src="{{ asset('images/test.jpg') }}" alt="Profile">
                 </div>
+                <h3>ADMIN DASHBOARD</h3>
             </div>
-            
-            <div class="header-right">
-                <div class="user-menu">
-                    <button onclick="logout()" class="logout-btn">Logout</button>
-                </div>
-                <div class="logo-con">
-                    <img src="{{ asset('images/test.jpg') }}" alt="logo">
-                    <h3>CPMS</h3>
-                </div>
-            </div>
+
+            <ul class="menu">
+                <li><a href="#" onclick="showSection('users')" class="btn active">Users</a></li>
+                <li><a href="#" onclick="showSection('uploads')" class="btn">Files</a></li>
+                <li><a href="#" onclick="showSection('tasks')" class="btn">Tasks</a></li>
+                <li><a href="#" onclick="showSection('complaints')" class="btn">Complaints</a></li>
+                <li><a href="#" onclick="logout()" class="btn">Logout</a></li>
+            </ul>
         </div>
 
-        <div class="dashboard-content">
-            <!-- Users List Section -->
-            <div class="section users-section">
+        <!-- Main Content -->
+        <div class="main-content">
+
+            <!-- Users Section -->
+            <div class="section users-section" id="users-section">
                 <div class="section-header">
                     <h3>System Users</h3>
                     <button type="button" id="loadUsersBtn" class="action-btn">Refresh Users</button>
@@ -37,7 +39,7 @@
             </div>
 
             <!-- User Form Section -->
-            <div class="section form-section">
+            <div class="section form-section" id="user-form-section" style="display: none;">
                 <div class="section-header">
                     <h3>Create/Edit User</h3>
                 </div>
@@ -65,7 +67,7 @@
                                 <label for="user_type">User Type:</label>
                                 <select id="user_type" name="user_type" class="form-select" required>
                                     <option value="client">Client</option>
-                                    <option value="worker">Worker</option>
+                                    <option value="staff">Staff</option>
                                     <option value="foreman">Foreman</option>
                                     <option value="manager">Manager</option>
                                     <option value="ceo">CEO</option>
@@ -118,10 +120,61 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Files Section -->
+            <div class="section uploads-section" id="uploads-section" style="display: none;">
+                <div class="section-header">
+                    <h3>All Files</h3>
+                    <button type="button" id="loadUploadsBtn" class="action-btn">Refresh Files</button>
+                </div>
+                <div id="uploads-list" class="uploads-list"></div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div class="section tasks-section" id="tasks-section" style="display: none;">
+                <div class="section-header">
+                    <h3>All Tasks</h3>
+                    <button type="button" id="loadTasksBtn" class="action-btn">Refresh Tasks</button>
+                </div>
+                <div id="tasks-list" class="tasks-list"></div>
+            </div>
+
+            <!-- Complaints Section -->
+            <div class="section complaints-section" id="complaints-section" style="display: none;">
+                <div class="section-header">
+                    <h3>All Complaints</h3>
+                    <button type="button" id="loadComplaintsBtn" class="action-btn">Refresh Complaints</button>
+                </div>
+                <div id="complaints-list" class="complaints-list"></div>
+            </div>
         </div>
     </div>
     
     <script src="{{ asset('js/crudHelper.js') }}"></script>
     <script src="{{ asset('js/admin.js') }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.btn');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
+    
+    function showSection(sectionName) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        const targetSection = document.getElementById(sectionName + '-section');
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+    }
+    </script>
 </body>
 </html>

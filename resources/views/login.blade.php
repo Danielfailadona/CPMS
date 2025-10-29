@@ -3,82 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login & Register</title>
-    <link rel="stylesheet" href="{{ asset('styles/login.css') }}">
+    <title>Login & Register - CPMS</title>
+    <link rel="stylesheet" href="{{ asset('styles/sidebar.css') }}">
 </head>
 <body>
-    <div class="main">
-        <div class="header">
-            <div class="con-in-header1">
-                <div class="title">
-                    <h1>LOGIN & REGISTER</h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-pic">
+                    <img src="{{ asset('images/test.jpg') }}" alt="CPMS Logo">
                 </div>
-            </div>
-            
-            <div class="con-in-header2">
-                <div class="logo-con">
-                    <img src="{{ asset('images/test.jpg') }}" alt="logo">
-                    <h3>CPMS</h3>
-                </div>
+                <h3>CPMS</h3>
+                <p>Construction Project Management System</p>
             </div>
         </div>
 
-        <div class="login-container">
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('login')">LOGIN</button>
-                <button class="tab" onclick="showTab('register')">REGISTER</button>
-            </div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="section form-section">
+                <div class="section-header">
+                    <h3>LOGIN & REGISTER</h3>
+                </div>
+                <div class="tabs" style="margin-bottom: 20px;">
+                    <button class="tab active btn-primary" onclick="showTab('login')" style="margin-right: 10px;">LOGIN</button>
+                    <button class="tab btn-secondary" onclick="showTab('register')">REGISTER</button>
+                </div>
 
-            <div id="message" class="message"></div>
+                <div id="message" class="message" style="display: none; padding: 10px; margin-bottom: 15px; border-radius: 4px;"></div>
 
-            <!-- Login Form -->
-            <form id="loginForm" class="form-container active">
-                @csrf
-                <div class="form-group">
-                    <label for="loginEmail">Email:</label>
-                    <input type="email" id="loginEmail" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password:</label>
-                    <input type="password" id="loginPassword" name="password" required>
-                </div>
-                <button type="submit" class="submit-btn">LOGIN</button>
-            </form>
+                <!-- Login Form -->
+                <form id="loginForm" class="form-container active">
+                    @csrf
+                    <div class="form-fields">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="loginEmail">Email:</label>
+                                <input type="email" id="loginEmail" name="email" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="loginPassword">Password:</label>
+                                <input type="password" id="loginPassword" name="password" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">LOGIN</button>
+                    </div>
+                </form>
 
-            <!-- Register Form -->
-            <form id="registerForm" class="form-container">
-                @csrf
-                <div class="form-group">
-                    <label for="registerName">Name:</label>
-                    <input type="text" id="registerName" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerEmail">Email:</label>
-                    <input type="email" id="registerEmail" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerUserType">User Type:</label>
-                    <select id="registerUserType" name="user_type" class="form-input" required>
-                        <option value="client">Client</option>
-                        <option value="worker">Worker</option>
-                        <option value="foreman">Foreman</option>
-                        <option value="manager">Manager</option>
-                        <option value="ceo">CEO</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="registerPassword">Password:</label>
-                    <input type="password" id="registerPassword" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="registerPasswordConfirmation">Confirm Password:</label>
-                    <input type="password" id="registerPasswordConfirmation" name="password_confirmation" required>
-                </div>
-                <button type="submit" class="submit-btn">REGISTER</button>
-            </form>
+                <!-- Register Form -->
+                <form id="registerForm" class="form-container" style="display: none;">
+                    @csrf
+                    <div class="form-fields">
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="registerName">Name:</label>
+                                <input type="text" id="registerName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="registerEmail">Email:</label>
+                                <input type="email" id="registerEmail" name="email" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="registerUserType">User Type:</label>
+                                <select id="registerUserType" name="user_type" class="form-select" required>
+                                    <option value="client">Client</option>
+                                    <option value="staff">Staff</option>
+                                    <option value="foreman">Foreman</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="ceo">CEO</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="registerPassword">Password:</label>
+                                <input type="password" id="registerPassword" name="password" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="registerPasswordConfirmation">Confirm Password:</label>
+                                <input type="password" id="registerPasswordConfirmation" name="password_confirmation" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">REGISTER</button>
+                    </div>
+                </form>
 
-            <div class="auth-status" id="authStatus">
-                Checking authentication...
+                <div class="auth-status" id="authStatus" style="margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                    Checking authentication...
+                </div>
             </div>
         </div>
     </div>
@@ -87,24 +111,28 @@
         function showTab(tabName) {
             // Hide all forms
             document.querySelectorAll('.form-container').forEach(form => {
-                form.classList.remove('active');
+                form.style.display = 'none';
             });
             
             // Remove active class from all tabs
             document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
+                tab.classList.remove('active', 'btn-primary');
+                tab.classList.add('btn-secondary');
             });
             
             // Show selected form and activate tab
-            document.getElementById(tabName + 'Form').classList.add('active');
-            event.target.classList.add('active');
+            document.getElementById(tabName + 'Form').style.display = 'block';
+            event.target.classList.remove('btn-secondary');
+            event.target.classList.add('active', 'btn-primary');
         }
 
         function showMessage(message, type) {
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = message;
-            messageDiv.className = 'message ' + type;
             messageDiv.style.display = 'block';
+            messageDiv.style.color = type === 'success' ? '#28a745' : '#dc3545';
+            messageDiv.style.backgroundColor = type === 'success' ? '#d4edda' : '#f8d7da';
+            messageDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'}`;
             
             setTimeout(() => {
                 messageDiv.style.display = 'none';
@@ -186,10 +214,10 @@
                 'foreman': '/foreman-dashboard',
                 'ceo': '/ceo-dashboard',
                 'manager': '/manager-dashboard',
-                'worker': '/worker-dashboard'
+                'staff': '/worker-dashboard'
             };
             
-            return dashboardRoutes[userType] || '/construction-report';
+            return dashboardRoutes[userType] || '/client-dashboard';
         }
 
         // Check authentication status on page load

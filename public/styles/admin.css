@@ -142,7 +142,7 @@ body{
 
 /* Users List */
 .users-list {
-    max-height: 300px;
+    max-height: 700px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 0.5rem;

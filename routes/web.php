@@ -14,6 +14,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/check-auth', [AuthController::class, 'checkAuth']);
+Route::get('/current-user', [AuthController::class, 'getCurrentUser']);
 
 // Protected Routes (require authentication)
 Route::middleware(['auth'])->group(function () {
@@ -41,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/worker-dashboard', function () {
         return view('worker-dashboard');
     });
+
+    Route::get('/current-user', [AuthController::class, 'getCurrentUser']);
 
     // Construction Report (your original page)
     Route::get('/construction-report', function () {

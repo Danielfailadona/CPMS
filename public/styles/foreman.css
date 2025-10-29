@@ -277,7 +277,7 @@ body{
     justify-content: center;
 }
 
-.action-btn, .btn-primary, .btn-clear {
+.action-btn, .btn-primary, .btn-clear, .resolve-btn, .notes-btn {
     padding: 0.8rem 1.5rem;
     border: none;
     border-radius: 0.5rem;
@@ -314,7 +314,7 @@ body{
 }
 
 /* Action Buttons in Upload List */
-.view-btn, .delete-btn {
+.view-btn, .delete-btn, .edit-btn{
     padding: 0.4rem 0.8rem;
     border: none;
     border-radius: 0.3rem;
@@ -324,7 +324,7 @@ body{
     transition: all 0.3s;
 }
 
-.view-btn {
+.view-btn, .edit-btn {
     background-color: #2196F3;
 }
 

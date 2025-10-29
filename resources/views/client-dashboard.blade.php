@@ -3,39 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Dashboard - File Management</title>
-    <link rel="stylesheet" href="{{ asset('styles/foreman.css') }}">
-    <link rel="stylesheet" href="{{ asset('styles/nav.css') }}">
+    <title>Client Dashboard - CPMS</title>
+    <link rel="stylesheet" href="{{ asset('styles/sidebar.css') }}">
 </head>
 <body>
-    <div class="main">
-        <div class="header">
-            <div class="header-left">
-                <div class="title">
-                    <h1>CLIENT DASHBOARD - FILE MANAGEMENT</h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-pic">
+                    <img src="{{ asset('images/test.jpg') }}" alt="Profile">
                 </div>
+                <h3>CLIENT DASHBOARD</h3>
             </div>
-            
-            <div class="header-right">
-                <div class="user-menu">
-                    <button onclick="logout()" class="logout-btn">Logout</button>
-                </div>
-                <div class="logo-con">
-                    <img src="{{ asset('images/test.jpg') }}" alt="logo">
-                    <h3>CPMS</h3>
-                </div>
-            </div>
+
+            <ul class="menu">
+                <li><a href="#" onclick="showSection('complaints')" class="btn active">My Complaints</a></li>
+                <li><a href="#" onclick="showSection('submit-complaint')" class="btn">Submit Complaint</a></li>
+                <li><a href="#" onclick="showSection('files')" class="btn">Available Files</a></li>
+                <li><a href="#" onclick="logout()" class="btn">Logout</a></li>
+            </ul>
         </div>
 
-        <div class="dashboard-content">
-            <!-- Navigation Buttons -->
-            <div class="section nav-section">
-                <div class="nav-buttons">
-                    <button class="nav-btn active" onclick="showSection('complaints')">My Complaints</button>
-                    <button class="nav-btn" onclick="showSection('submit-complaint')">Submit Complaint</button>
-                    <button class="nav-btn" onclick="showSection('files')">Available Files</button>
-                </div>
-            </div>
+        <!-- Main Content -->
+        <div class="main-content">
 
             <!-- Complaints Section -->
             <div class="section complaints-section" id="complaints-section">
@@ -94,6 +85,21 @@
                     <h3>Available Files</h3>
                     <button type="button" id="loadUploadsBtn" class="action-btn">Refresh Files</button>
                 </div>
+                <div class="file-filters" style="margin-bottom: 15px;">
+                    <input type="text" id="search-files" placeholder="Search files by name..." style="padding: 8px; margin-right: 10px; width: 200px;">
+                    <select id="filter-type" style="padding: 8px; margin-right: 10px;">
+                        <option value="all">All Types</option>
+                        <option value="task">Task Related</option>
+                        <option value="image">Images</option>
+                        <option value="report">Reports</option>
+                        <option value="document">Documents</option>
+                        <option value="blueprint">Blueprints</option>
+                        <option value="safety">Safety</option>
+                        <option value="inspection">Inspection</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <button type="button" id="apply-filters" class="action-btn">Apply Filters</button>
+                </div>
                 <div id="uploads-list" class="uploads-list"></div>
             </div>
         </div>
@@ -101,5 +107,32 @@
     
     <script src="{{ asset('js/crudHelper.js') }}"></script>
     <script src="{{ asset('js/client.js') }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.btn');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+            });
+        });
+    });
+    
+    function showSection(sectionName) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        const targetSection = document.getElementById(sectionName + '-section');
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+    }
+    </script>
 </body>
 </html>

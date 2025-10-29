@@ -64,7 +64,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'user_type' => 'required|in:client,foreman,ceo,manager,worker', // Admin excluded
+            'user_type' => 'required|in:client,foreman,ceo,manager,staff', // Admin excluded
             'password' => 'required|string|min:8|confirmed'
         ]);
 
@@ -106,5 +106,21 @@ class AuthController extends Controller
             'authenticated' => Auth::check(),
             'user' => Auth::user()
         ]);
+    }
+
+    // Get current user info
+    public function getCurrentUser()
+    {
+        if (Auth::check()) {
+            return response()->json([
+                'success' => true,
+                'user' => Auth::user()
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Not authenticated'
+        ], 401);
     }
 }

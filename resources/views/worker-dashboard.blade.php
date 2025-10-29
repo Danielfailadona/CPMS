@@ -3,42 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Dashboard - File Management</title>
-    <link rel="stylesheet" href="{{ asset('styles/foreman.css') }}">
-    <link rel="stylesheet" href="{{ asset('styles/nav.css') }}">
+    <title>Staff Dashboard - CPMS</title>
+    <link rel="stylesheet" href="{{ asset('styles/sidebar.css') }}">
 </head>
 <body>
-    <div class="main">
-        <div class="header">
-            <div class="header-left">
-                <div class="title">
-                    <h1>WORKER DASHBOARD - FILE MANAGEMENT</h1>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="profile">
+                <div class="profile-pic">
+                    <img src="{{ asset('images/test.jpg') }}" alt="Profile">
                 </div>
+                <h3>STAFF DASHBOARD</h3>
             </div>
-            
-            <div class="header-right">
-                <div class="user-menu">
-                    <button onclick="logout()" class="logout-btn">Logout</button>
-                </div>
-                <div class="logo-con">
-                    <img src="{{ asset('images/test.jpg') }}" alt="logo">
-                    <h3>CPMS</h3>
-                </div>
-            </div>
+
+            <ul class="menu">
+                <li><a href="#" onclick="showSection('tasks')" class="btn active">My Tasks</a></li>
+                <li><a href="#" onclick="showSection('send-task')" class="btn">Send Task</a></li>
+                <li><a href="#" onclick="showSection('complaints')" class="btn">Client Complaints</a></li>
+                <li><a href="#" onclick="showSection('files')" class="btn">My Files</a></li>
+                <li><a href="#" onclick="showSection('upload')" class="btn">Upload File</a></li>
+                <li><a href="#" onclick="showSection('camera')" class="btn">📷 Take Photo</a></li>
+                <li><a href="#" onclick="logout()" class="btn">Logout</a></li>
+            </ul>
         </div>
 
-        <div class="dashboard-content">
-            <!-- Navigation Buttons -->
-            <div class="section nav-section">
-                <div class="nav-buttons">
-                    <button class="nav-btn active" onclick="showSection('tasks')">My Tasks</button>
-                    <button class="nav-btn" onclick="showSection('send-task')">Send Task</button>
-                    <button class="nav-btn" onclick="showSection('complaints')">Client Complaints</button>
-                    <button class="nav-btn" onclick="showSection('files')">My Files</button>
-                    <button class="nav-btn" onclick="showSection('upload')">Upload File</button>
-                    <button class="nav-btn" onclick="showSection('camera')">📷 Take Photo</button>
-                </div>
-            </div>
+        <!-- Main Content -->
+        <div class="main-content">
 
             <!-- Tasks Section -->
             <div class="section tasks-section" id="tasks-section">
@@ -72,6 +63,15 @@
                                     <option value="medium" selected>Medium</option>
                                     <option value="high">High</option>
                                     <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="input-group">
+                                <label for="task_foreman">Assign to Foreman:</label>
+                                <select id="task_foreman" name="foreman_id" class="form-select" required>
+                                    <option value="">Select a foreman...</option>
                                 </select>
                             </div>
                         </div>
@@ -113,6 +113,19 @@
                     <h3>My Uploads</h3>
                     <button type="button" id="loadUploadsBtn" class="action-btn">Refresh Files</button>
                 </div>
+                <div class="file-filters" style="margin-bottom: 15px;">
+                    <input type="text" id="search-files" placeholder="Search files by name..." style="padding: 8px; margin-right: 10px; width: 200px;">
+                    <select id="filter-type" style="padding: 8px; margin-right: 10px;">
+                        <option value="all">All Types</option>
+                        <option value="task">Task Related</option>
+                        <option value="image">Images</option>
+                        <option value="report">Reports</option>
+                        <option value="safety">Safety</option>
+                        <option value="inspection">Inspection</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <button type="button" id="apply-filters" class="action-btn">Apply Filters</button>
+                </div>
                 <div id="uploads-list" class="uploads-list"></div>
             </div>
 
@@ -144,7 +157,7 @@
                                 <label for="upload_type">File Type:</label>
                                 <select id="upload_type" name="upload_type" class="form-select" required>
                                     <option value="task">Task Related</option>
-                                    <option value="report">Work Report</option>
+                                    <option value="report">Staff Report</option>
                                     <option value="safety">Safety Document</option>
                                     <option value="inspection">Inspection Report</option>
                                     <option value="other">Other</option>
@@ -240,5 +253,29 @@
     
     <script src="{{ asset('js/crudHelper.js') }}"></script>
     <script src="{{ asset('js/worker.js') }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.btn');
+        
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    });
+    
+    function showSection(sectionName) {
+        document.querySelectorAll('.section').forEach(section => {
+            section.style.display = 'none';
+        });
+        const targetSection = document.getElementById(sectionName + '-section');
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+    }
+    </script>
 </body>
 </html>

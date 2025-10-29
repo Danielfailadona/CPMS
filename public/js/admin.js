@@ -1,13 +1,22 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize generic CRUD helper for users table
+    // Initialize CRUD helpers for all tables
     const userCrud = new CrudHelper('users');
+    const uploadCrud = new CrudHelper('uploads');
+    const taskCrud = new CrudHelper('tasks');
+    const complaintCrud = new CrudHelper('complaints');
     
     const form = document.getElementById('userForm');
     const createBtn = document.getElementById('createBtn');
     const updateBtn = document.getElementById('updateBtn');
     const loadUsersBtn = document.getElementById('loadUsersBtn');
+    const loadUploadsBtn = document.getElementById('loadUploadsBtn');
+    const loadTasksBtn = document.getElementById('loadTasksBtn');
+    const loadComplaintsBtn = document.getElementById('loadComplaintsBtn');
     const clearBtn = document.getElementById('clearBtn');
     const usersList = document.getElementById('users-list');
+    const uploadsList = document.getElementById('uploads-list');
+    const tasksList = document.getElementById('tasks-list');
+    const complaintsList = document.getElementById('complaints-list');
 
     let currentEditingId = null;
 
@@ -63,8 +72,11 @@ document.addEventListener('DOMContentLoaded', function() {
         form.dispatchEvent(new Event('submit'));
     });
 
-    // Load all users
+    // Load data event listeners
     loadUsersBtn.addEventListener('click', loadUsers);
+    loadUploadsBtn.addEventListener('click', loadUploads);
+    loadTasksBtn.addEventListener('click', loadTasks);
+    loadComplaintsBtn.addEventListener('click', loadComplaints);
 
     // Clear form
     clearBtn.addEventListener('click', resetForm);
@@ -213,6 +225,194 @@ document.addEventListener('DOMContentLoaded', function() {
         createBtn.style.display = 'inline-block';
         updateBtn.style.display = 'none';
     }
+
+    // Navigation function
+    window.showSection = function(section) {
+        // Hide all sections
+        document.getElementById('users-section').style.display = 'none';
+        document.getElementById('user-form-section').style.display = 'none';
+        document.getElementById('uploads-section').style.display = 'none';
+        document.getElementById('tasks-section').style.display = 'none';
+        document.getElementById('complaints-section').style.display = 'none';
+        
+        // Remove active class from all nav buttons
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Show selected section and activate button
+        if (section === 'users') {
+            document.getElementById('users-section').style.display = 'block';
+            document.getElementById('user-form-section').style.display = 'block';
+            event.target.classList.add('active');
+            loadUsers();
+        } else if (section === 'uploads') {
+            document.getElementById('uploads-section').style.display = 'block';
+            event.target.classList.add('active');
+            loadUploads();
+        } else if (section === 'tasks') {
+            document.getElementById('tasks-section').style.display = 'block';
+            event.target.classList.add('active');
+            loadTasks();
+        } else if (section === 'complaints') {
+            document.getElementById('complaints-section').style.display = 'block';
+            event.target.classList.add('active');
+            loadComplaints();
+        }
+    };
+
+    // Load uploads function
+    async function loadUploads() {
+        const uploads = await uploadCrud.readAll();
+        
+        if (uploads.length === 0) {
+            uploadsList.innerHTML = '<p class="no-uploads">No files found.</p>';
+            return;
+        }
+        
+        const uploadsHTML = uploads.map(upload => `
+            <div class="upload-item" data-id="${upload.id}">
+                <div class="upload-info">
+                    <div class="upload-title">${upload.title || upload.filename}</div>
+                    <div class="upload-details">
+                        <span class="upload-type">${upload.upload_type}</span>
+                        <span class="upload-size">${upload.file_size}</span>
+                        <span class="upload-date">${new Date(upload.created_at).toLocaleDateString()}</span>
+                        <span class="upload-user">User: ${upload.user_id}</span>
+                    </div>
+                </div>
+                <div class="upload-actions">
+                    <button class="view-btn" onclick="viewUpload(${upload.id})">View</button>
+                    <button class="delete-btn" onclick="deleteUpload(${upload.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+        
+        uploadsList.innerHTML = uploadsHTML;
+    }
+
+    // Load tasks function
+    async function loadTasks() {
+        const tasks = await taskCrud.readAll();
+        
+        if (tasks.length === 0) {
+            tasksList.innerHTML = '<p class="no-tasks">No tasks found.</p>';
+            return;
+        }
+        
+        const tasksHTML = tasks.map(task => `
+            <div class="task-item" data-id="${task.id}">
+                <div class="task-info">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-details">
+                        <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
+                        <span class="task-status status-${task.status}">${task.status.replace('_', ' ').toUpperCase()}</span>
+                        <span class="task-date">${new Date(task.created_at).toLocaleDateString()}</span>
+                        <span class="task-worker">Staff: ${task.worker_id}</span>
+                        <span class="task-foreman">Foreman: ${task.foreman_id}</span>
+                    </div>
+                    <div class="task-description">${task.description}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="view-btn" onclick="viewTask(${task.id})">View</button>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+        
+        tasksList.innerHTML = tasksHTML;
+    }
+
+    // Load complaints function
+    async function loadComplaints() {
+        const complaints = await complaintCrud.readAll();
+        
+        if (complaints.length === 0) {
+            complaintsList.innerHTML = '<p class="no-complaints">No complaints found.</p>';
+            return;
+        }
+        
+        const complaintsHTML = complaints.map(complaint => `
+            <div class="complaint-item" data-id="${complaint.id}">
+                <div class="complaint-info">
+                    <div class="complaint-title">${complaint.title}</div>
+                    <div class="complaint-details">
+                        <span class="complaint-priority priority-${complaint.priority}">${complaint.priority.toUpperCase()}</span>
+                        <span class="complaint-status status-${complaint.status}">${complaint.status.replace('_', ' ').toUpperCase()}</span>
+                        <span class="complaint-date">${new Date(complaint.created_at).toLocaleDateString()}</span>
+                        <span class="complaint-client">Client: ${complaint.client_id}</span>
+                    </div>
+                    <div class="complaint-description">${complaint.description}</div>
+                </div>
+                <div class="complaint-actions">
+                    <button class="view-btn" onclick="viewComplaint(${complaint.id})">View</button>
+                    <button class="delete-btn" onclick="deleteComplaint(${complaint.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+        
+        complaintsList.innerHTML = complaintsHTML;
+    }
+
+    // View functions for other tables
+    window.viewUpload = async function(id) {
+        const result = await uploadCrud.readOne(id);
+        if (result.success) {
+            const upload = result.data;
+            alert(`File Details:\n\nTitle: ${upload.title}\nFilename: ${upload.filename}\nType: ${upload.upload_type}\nSize: ${upload.file_size}\nUser ID: ${upload.user_id}\nUploaded: ${new Date(upload.created_at).toLocaleString()}`);
+        }
+    };
+
+    window.viewTask = async function(id) {
+        const result = await taskCrud.readOne(id);
+        if (result.success) {
+            const task = result.data;
+            alert(`Task Details:\n\nTitle: ${task.title}\nDescription: ${task.description}\nPriority: ${task.priority}\nStatus: ${task.status}\nStaff ID: ${task.worker_id}\nForeman ID: ${task.foreman_id}\nCreated: ${new Date(task.created_at).toLocaleString()}`);
+        }
+    };
+
+    window.viewComplaint = async function(id) {
+        const result = await complaintCrud.readOne(id);
+        if (result.success) {
+            const complaint = result.data;
+            alert(`Complaint Details:\n\nTitle: ${complaint.title}\nDescription: ${complaint.description}\nPriority: ${complaint.priority}\nStatus: ${complaint.status}\nClient ID: ${complaint.client_id}\nCreated: ${new Date(complaint.created_at).toLocaleString()}`);
+        }
+    };
+
+    // Delete functions for other tables
+    window.deleteUpload = async function(id) {
+        if (confirm('Are you sure you want to delete this file?')) {
+            const result = await uploadCrud.delete(id);
+            if (result.success) {
+                alert('File deleted successfully!');
+                loadUploads();
+            } else {
+                alert('Error: ' + (result.message || 'Unknown error'));
+            }
+        }
+    };
+
+    window.deleteTask = async function(id) {
+        if (confirm('Are you sure you want to delete this task?')) {
+            const result = await taskCrud.delete(id);
+            if (result.success) {
+                alert('Task deleted successfully!');
+                loadTasks();
+            } else {
+                alert('Error: ' + (result.message || 'Unknown error'));
+            }
+        }
+    };
+
+    window.deleteComplaint = async function(id) {
+        if (confirm('Are you sure you want to delete this complaint?')) {
+            const result = await complaintCrud.delete(id);
+            if (result.success) {
+                alert('Complaint deleted successfully!');
+                loadComplaints();
+            } else {
+                alert('Error: ' + (result.message || 'Unknown error'));
+            }
+        }
+    };
 
     // Load users on page load
     loadUsers();

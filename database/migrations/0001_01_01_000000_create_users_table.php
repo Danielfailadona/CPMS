@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('user_type', ['admin', 'client', 'foreman', 'ceo', 'manager', 'worker'])->default('client');
+            $table->enum('user_type', ['admin', 'client', 'foreman', 'ceo', 'manager', 'staff'])->default('client');
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->boolean('is_active')->default(true);

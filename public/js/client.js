@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadComplaintsBtn.addEventListener('click', loadComplaints);
     loadUploadsBtn.addEventListener('click', loadUploads);
     clearComplaintFormBtn.addEventListener('click', resetComplaintForm);
+    
+    // Filter functionality
+    document.getElementById('apply-filters').addEventListener('click', () => loadUploads(true));
+    document.getElementById('search-files').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') loadUploads(true);
+    });
 
     // Handle complaint submission
     complaintForm.addEventListener('submit', async function(e) {
@@ -78,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span class="complaint-date">${new Date(complaint.created_at).toLocaleDateString()}</span>
                         </div>
                         <div class="complaint-description">${complaint.description}</div>
-                        ${complaint.worker_notes ? `<div class="worker-notes"><strong>Worker Notes:</strong> ${complaint.worker_notes}</div>` : ''}
+                        ${complaint.worker_notes ? `<div class="staff-notes"><strong>Staff Notes:</strong> ${complaint.worker_notes}</div>` : ''}
                     </div>
                     <div class="complaint-actions">
                         ${complaint.status === 'resolved' ? `<button class="delete-btn" onclick="deleteComplaint(${complaint.id})">Delete (Satisfied)</button>` : ''}
@@ -93,9 +99,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function loadUploads() {
+    async function loadUploads(applyFilters = false) {
         try {
-            const uploads = await uploadCrud.readAll();
+            let uploads = await uploadCrud.readAll();
+            
+            // Apply search and type filters
+            if (applyFilters) {
+                const searchTerm = document.getElementById('search-files').value.toLowerCase();
+                const typeFilter = document.getElementById('filter-type').value;
+                
+                if (searchTerm) {
+                    uploads = uploads.filter(upload => 
+                        (upload.title && upload.title.toLowerCase().includes(searchTerm)) ||
+                        (upload.filename && upload.filename.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                if (typeFilter !== 'all') {
+                    uploads = uploads.filter(upload => upload.upload_type === typeFilter);
+                }
+            }
             
             if (uploads.length === 0) {
                 uploadsList.innerHTML = '<p class="no-uploads">No files available.</p>';
